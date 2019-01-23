@@ -1,0 +1,52 @@
+{% extends 'shop/layout.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="col-md-6 offset-md-3 mt-5">
+        <form action="" method="POST" id="order-form">
+            {% csrf_token %}
+            <div class="card card-default">
+                <div class="card-header">
+                    주문하기
+                </div>
+                <div class="card-body">
+                    <img src="{{ item.photo.url }}" alt="">
+                    <table>
+                        {{ form.as_table }}
+                    </table>
+                </div>
+                <div class="card-footer">
+                    <input type="submit" class="btn btn-outline-primary" value="결제하기" onclick="open_payment=True">
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+{% endblock %}
+{% block extra_body %}
+    <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.1.5.js"></script>
+        <script>
+            $(function(){
+                var $form = $('#order-form');
+                var params = {
+                    name: $form.find('[name=name]').val(),
+                    amount: $form.find('[name=amount]').val(),
+                };
+                IMP.init('{{ iamport_shop_id }}')
+                IMP.request_pay(params, function(response_data) {
+                    console.log('response_data:', response_data);
+                    if (! response_data.success ) {
+                        alert(response_data.error_msg + "(" + response_data.error_code + ")");
+                        location.href = '{% url "shop:index" %}';
+                    }
+                    else {
+                        $.each(response_data, function(key, value) {
+                            $form.find('input[name=' + key + "]").val(value);
+                        });
+                        $form.submit();
+                    }
+                });
+            });
+        </script>
+{% endblock %}
